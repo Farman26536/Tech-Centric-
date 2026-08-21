@@ -16,11 +16,7 @@ const roleStyles: Record<User['role'], string> = {
 export default function UserCard({ user, isCurrentUser, onSelect, onRoleChange }: Props) {
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <button
-        type="button"
-        onClick={onSelect}
-        className="block w-full text-left"
-      >
+      <button type="button" onClick={onSelect} className="block w-full text-left">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">

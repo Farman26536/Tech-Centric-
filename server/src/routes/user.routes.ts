@@ -1,12 +1,13 @@
 import { Router } from 'express';
+import { getUsers, getUser, putUser, removeUser } from '../controllers/user.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import { requireAdmin } from '../middleware/role.middleware.js';
-import * as userController from '../controllers/user.controller.js';
 
 export const userRouter = Router();
 
-userRouter.get('/', authenticate, userController.listUsers);
-userRouter.get('/me', authenticate, userController.getCurrentUser);
-userRouter.get('/:id', authenticate, userController.getUser);
-userRouter.put('/:id', authenticate, userController.updateUser);
-userRouter.put('/:id/role', authenticate, requireAdmin, userController.updateUserRole);
+userRouter.use(authenticate, requireAdmin);
+
+userRouter.get('/', getUsers);
+userRouter.get('/:id', getUser);
+userRouter.put('/:id', putUser);
+userRouter.delete('/:id', removeUser);

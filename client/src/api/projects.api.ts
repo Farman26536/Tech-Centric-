@@ -1,38 +1,31 @@
-import axios from 'axios';
-import type { Project, ProjectInput, ProjectListResponse } from '../types/project.types';
+import { api } from './axios';
+import type { Project } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-  headers: { 'Content-Type': 'application/json' }
-});
+export const fetchProjects = async (page = 1, limit = 20) => {
+  const res = await api.get('/projects', { params: { page, limit } });
+  return res.data.data as { data: Project[]; meta: any };
+};
 
-export const projectsApi = {
-  list: async (page = 1, limit = 20, search = '', status = '') => {
-    const { data } = await api.get<{ success: boolean; data: ProjectListResponse }>('/projects', {
-      params: { page, limit, search, status }
-    });
-    return data.data;
-  },
+export const fetchProject = async (id: string) => {
+  const res = await api.get(`/projects/${id}`);
+  return res.data.data.project as Project & { tasks?: any[] };
+};
 
-  get: async (id: string) => {
-    const { data } = await api.get<{ success: boolean; data: Project }>(`/projects/${id}`);
-    return data.data;
-  },
+export const createProject = async (payload: Partial<Project>) => {
+  const res = await api.post('/projects', payload);
+  return res.data.data.project as Project;
+};
 
-  create: async (input: ProjectInput) => {
-    const { data } = await api.post<{ success: boolean; data: Project }>('/projects', input);
-    return data.data;
-  },
+export const updateProject = async (id: string, payload: Partial<Project>) => {
+  const res = await api.put(`/projects/${id}`, payload);
+  return res.data.data.project as Project;
+};
 
-  update: async (id: string, input: Partial<ProjectInput>) => {
-    const { data } = await api.put<{ success: boolean; data: Project }>(`/projects/${id}`, input);
-    return data.data;
-  },
+export const archiveProject = async (id: string) => {
+  const res = await api.patch(`/projects/${id}/archive`);
+  return res.data.data.project as Project;
+};
 
-  delete: async (id: string) => {
-    const { data } = await api.delete<{ success: boolean; data: null }>(`/projects/${id}`);
-    return data;
-  }
+export const deleteProject = async (id: string) => {
+  await api.delete(`/projects/${id}`);
 };

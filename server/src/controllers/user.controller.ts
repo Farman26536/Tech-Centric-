@@ -1,67 +1,43 @@
 import type { Request, Response, NextFunction } from 'express';
-import * as userService from '../services/user.service.js';
-import { errorResponse, successResponse } from '../utils/apiResponse.js';
-import { HttpError } from '../utils/httpError.js';
+import { listUsers, getUserById, updateUser, deleteUser } from '../services/user.service.js';
+import { successResponse } from '../utils/apiResponse.js';
 
-function user(req: Request) {
-  if (!req.auth) throw new HttpError(401, 'Authentication required');
-  return req.auth;
-}
-
-export async function listUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
+export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const u = user(req);
-    const { page = '1', limit = '20', search = '', role = '' } = req.query as Record<string, string>;
-    const result = await userService.listUsers(u.userId, u.role, {
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || 20,
-      search: search || '',
-      role: role || ''
-    });
+    const page = Number(req.query.page || 1);
+    const limit = Number(req.query.limit || 20);
+    const search = typeof req.query.search === 'string' ? req.query.search : undefined;
+    const result = await listUsers({ page, limit, search });
     successResponse(res, result);
   } catch (error) {
     next(error);
   }
-}
+};
 
-export async function getUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+export const getUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const u = user(req);
-    const userData = await userService.getUser(req.params.id, u.role);
-    successResponse(res, userData);
+    const user = await getUserById(req.params.id);
+    successResponse(res, { user });
   } catch (error) {
     next(error);
   }
-}
+};
 
-export async function getCurrentUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+export const putUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const u = user(req);
-    const userData = await userService.getCurrentUser(u.userId);
-    successResponse(res, userData);
+    const data = req.body;
+    const user = await updateUser(req.params.id, data);
+    successResponse(res, { user });
   } catch (error) {
     next(error);
   }
-}
+};
 
-export async function updateUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+export const removeUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const u = user(req);
-    const { name, email } = req.body as { name?: string; email?: string };
-    const updated = await userService.updateUser(req.params.id, u.userId, u.role, { name, email });
-    successResponse(res, updated);
+    await deleteUser(req.params.id);
+    successResponse(res, { message: 'User deleted' });
   } catch (error) {
     next(error);
   }
-}
-
-export async function updateUserRole(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const u = user(req);
-    const { role } = req.body as { role: 'ADMIN' | 'MEMBER' };
-    const updated = await userService.updateUserRole(req.params.id, u.role, role);
-    successResponse(res, updated);
-  } catch (error) {
-    next(error);
-  }
-}
+};

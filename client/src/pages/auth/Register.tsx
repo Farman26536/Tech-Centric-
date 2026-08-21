@@ -1,13 +1,116 @@
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Link, useNavigate } from 'react-router-dom';
-import { register as registerApi } from '../../api/auth.api';
-import Input from '../../components/common/Input';
-import Select from '../../components/common/Select';
-import Button from '../../components/common/Button';
-import toast from 'react-hot-toast';
+import { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate, Link } from 'react-router-dom';
+import { User, Mail, Lock, Eye, EyeOff, Check } from 'lucide-react';
 
-const schema=z.object({name:z.string().trim().min(2,'Name must contain at least 2 characters'),email:z.string().trim().email('Enter a valid email address'),password:z.string().min(8,'Use at least 8 characters').regex(/[A-Z]/,'Add an uppercase letter').regex(/[a-z]/,'Add a lowercase letter').regex(/[0-9]/,'Add a number'),confirm:z.string(),role:z.enum(['ADMIN','MEMBER'])}).refine(x=>x.password===x.confirm,{path:['confirm'],message:'Passwords do not match'});
-type Form=z.infer<typeof schema>;
-export default function Register(){const nav=useNavigate();const {register,handleSubmit,formState:{errors,isSubmitting}}=useForm<Form>({resolver:zodResolver(schema),defaultValues:{role:'MEMBER'}});const submit=async(d:Form)=>{try{await registerApi({name:d.name,email:d.email,password:d.password,role:d.role});toast.success('Account created');nav('/login',{replace:true})}catch(e:any){toast.error(e?.response?.data?.message||'Registration failed. Please try again.')}};return <div className="grid min-h-screen place-items-center bg-slate-950 p-4"><form noValidate onSubmit={handleSubmit(submit)} className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl" aria-labelledby="register-title"><div className="mb-6"><div className="text-2xl font-black text-brand-600">TeamFlow</div><h1 id="register-title" className="mt-3 text-2xl font-bold">Create account</h1></div><div className="space-y-4"><Input label="Name" autoComplete="name" {...register('name')} error={errors.name?.message}/><Input label="Email" type="email" autoComplete="email" {...register('email')} error={errors.email?.message}/><Input label="Password" type="password" autoComplete="new-password" {...register('password')} error={errors.password?.message}/><Input label="Confirm password" type="password" autoComplete="new-password" {...register('confirm')} error={errors.confirm?.message}/><Select label="Role" {...register('role')} error={errors.role?.message}><option value="MEMBER">Member</option><option value="ADMIN">Admin</option></Select><p className="text-xs text-slate-500">Password: 8+ characters, uppercase, lowercase and number.</p><Button type="submit" loading={isSubmitting} className="w-full bg-brand-600 text-white">Create account</Button></div><p className="mt-5 text-center text-sm text-slate-500">Already registered? <Link className="font-semibold text-brand-600" to="/login">Sign in</Link></p></form></div>}
+export default function Register() {
+  const { register } = useAuth();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [role, setRole] = useState<'ADMIN' | 'MEMBER'>('MEMBER');
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    setError(null);
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await register({ name, email, password, role });
+      navigate('/');
+    } catch (err: any) {
+      setError(err?.message ?? 'Failed to create account');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="max-w-md w-full bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-indigo-50 rounded-md text-indigo-600"><User className="w-6 h-6" /></div>
+          <div>
+            <div className="text-lg font-semibold">Create your account</div>
+            <div className="text-sm text-gray-500">Join TeamFlow and start managing your projects.</div>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && <div className="text-sm text-red-600 bg-red-50 border border-red-100 p-3 rounded">{error}</div>}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><User className="w-4 h-4" /></div>
+              <input className="mt-1 block w-full border rounded-lg px-10 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300" value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><Mail className="w-4 h-4" /></div>
+              <input type="email" placeholder="Enter your email" className="mt-1 block w-full border rounded-lg px-10 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><Lock className="w-4 h-4" /></div>
+              <input type={showPassword ? 'text' : 'password'} placeholder="Create a password" className="mt-1 block w-full border rounded-lg px-10 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <button type="button" onClick={() => setShowPassword((s) => !s)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500">{showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}</button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm password</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><Lock className="w-4 h-4" /></div>
+              <input type={showConfirm ? 'text' : 'password'} placeholder="Confirm password" className="mt-1 block w-full border rounded-lg px-10 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+              <button type="button" onClick={() => setShowConfirm((s) => !s)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500">{showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}</button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <select className="mt-1 block w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300" value={role} onChange={(e) => setRole(e.target.value as any)}>
+              <option value="MEMBER">Member</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+          </div>
+
+          <div>
+            <button type="submit" disabled={isSubmitting} className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 disabled:opacity-60">
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                  Creating account...
+                </>
+              ) : (
+                <>
+                  Create account
+                  <Check className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className="text-center text-sm text-gray-600">
+            Already have an account? <Link to="/login" className="text-indigo-600 hover:underline">Sign in</Link>
+          </div>
+        </form>
+      </div>
+    </main>
+  );
+}

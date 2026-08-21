@@ -1,160 +1,50 @@
-import { prisma } from '../utils/prisma.js';
-import { HttpError } from '../utils/httpError.js';
+import { prisma } from '../config/database.js';
+import type { ProjectStatus } from '@prisma/client';
 
-export async function listProjects(
-  userId: string,
-  role: string,
-  filters: { page: number; limit: number; search?: string; status?: string }
-) {
-  try {
-    const where: any = {};
-    if (filters.search) {
-      where.OR = [
-        { title: { contains: filters.search, mode: 'insensitive' } },
-        { description: { contains: filters.search, mode: 'insensitive' } }
-      ];
-    }
-    if (filters.status) {
-      where.status = filters.status;
-    }
-
-    const skip = (filters.page - 1) * filters.limit;
-    const [projects, total] = await Promise.all([
-      prisma.project.findMany({
-        where,
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          deadline: true,
-          status: true,
-          createdAt: true,
-          updatedAt: true,
-          _count: { select: { tasks: true } }
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: filters.limit
-      }),
-      prisma.project.count({ where })
-    ]);
-
-    return {
-      data: projects,
-      pagination: { page: filters.page, limit: filters.limit, total, totalPages: Math.ceil(total / filters.limit) }
-    };
-  } catch (error) {
-    throw new HttpError(500, 'Failed to list projects');
-  }
-}
-
-export async function getProject(projectId: string, userId: string, role: string) {
-  const project = await prisma.project.findUnique({
-    where: { id: projectId },
-    include: {
-      tasks: {
-        select: {
-          id: true,
-          title: true,
-          status: true,
-          priority: true,
-          assignedTo: true,
-          dueDate: true,
-          createdAt: true
-        },
-        orderBy: { createdAt: 'desc' }
-      },
-      _count: { select: { tasks: true } }
-    }
-  });
-
-  if (!project) throw new HttpError(404, 'Project not found');
+export const createProject = async (data: {
+  name: string;
+  description?: string;
+  startDate?: Date | null;
+  dueDate?: Date | null;
+}) => {
+  const project = await prisma.project.create({ data });
   return project;
-}
+};
 
-export async function createProject(
-  userId: string,
-  role: string,
-  input: { title: string; description?: string | null; deadline?: string | null; status?: string }
-) {
-  if (role !== 'ADMIN') {
-    throw new HttpError(403, 'Only admins can create projects');
+export const getProjects = async (opts: { page?: number; limit?: number } = {}) => {
+  const page = Math.max(1, opts.page ?? 1);
+  const limit = Math.max(1, Math.min(100, opts.limit ?? 20));
+  const skip = (page - 1) * limit;
+
+  const [total, projects] = await Promise.all([
+    prisma.project.count(),
+    prisma.project.findMany({ skip, take: limit, orderBy: { createdAt: 'desc' } })
+  ]);
+
+  return { data: projects, meta: { total, page, limit, pages: Math.ceil(total / limit) } };
+};
+
+export const getProjectById = async (id: string) => {
+  const project = await prisma.project.findUnique({ where: { id }, include: { tasks: true } });
+  if (!project) {
+    const error = new Error('Project not found');
+    error.name = 'NotFoundError';
+    throw error;
   }
-
-  const project = await prisma.project.create({
-    data: {
-      title: input.title,
-      description: input.description || null,
-      deadline: input.deadline ? new Date(input.deadline) : null,
-      status: input.status || 'ACTIVE'
-    },
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      deadline: true,
-      status: true,
-      createdAt: true,
-      updatedAt: true,
-      _count: { select: { tasks: true } }
-    }
-  });
-
   return project;
-}
+};
 
-export async function updateProject(
-  projectId: string,
-  userId: string,
-  role: string,
-  input: { title?: string; description?: string; deadline?: string; status?: string }
-) {
-  if (role !== 'ADMIN') {
-    throw new HttpError(403, 'Only admins can update projects');
-  }
-
-  const existing = await prisma.project.findUnique({ where: { id: projectId }, select: { id: true } });
-  if (!existing) throw new HttpError(404, 'Project not found');
-
-  const data: any = {};
-  if (input.title !== undefined) data.title = input.title;
-  if (input.description !== undefined) data.description = input.description;
-  if (input.deadline !== undefined) data.deadline = input.deadline ? new Date(input.deadline) : null;
-  if (input.status !== undefined) data.status = input.status;
-
-  const project = await prisma.project.update({
-    where: { id: projectId },
-    data,
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      deadline: true,
-      status: true,
-      createdAt: true,
-      updatedAt: true,
-      _count: { select: { tasks: true } }
-    }
-  });
-
+export const updateProject = async (id: string, data: Partial<{ name: string; description?: string; status?: ProjectStatus; startDate?: Date | null; dueDate?: Date | null }>) => {
+  const project = await prisma.project.update({ where: { id }, data });
   return project;
-}
+};
 
-export async function deleteProject(projectId: string, userId: string, role: string) {
-  if (role !== 'ADMIN') {
-    throw new HttpError(403, 'Only admins can delete projects');
-  }
+export const archiveProject = async (id: string) => {
+  const project = await prisma.project.update({ where: { id }, data: { status: 'ARCHIVED' } as any });
+  return project;
+};
 
-  const existing = await prisma.project.findUnique({
-    where: { id: projectId },
-    select: { id: true, tasks: { select: { id: true } } }
-  });
-
-  if (!existing) throw new HttpError(404, 'Project not found');
-
-  if (existing.tasks.length > 0) {
-    throw new HttpError(400, 'Cannot delete project with existing tasks');
-  }
-
-  await prisma.project.delete({ where: { id: projectId } });
-}
+export const deleteProject = async (id: string) => {
+  await prisma.project.delete({ where: { id } });
+  return true;
+};

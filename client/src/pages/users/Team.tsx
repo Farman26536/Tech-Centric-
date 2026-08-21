@@ -1,2 +1,32 @@
-import { useQuery } from '@tanstack/react-query'; import { getUsers } from '../../api/users.api'; import { teamPerformance } from '../../api/dashboard.api'; import Card from '../../components/common/Card'; import Badge from '../../components/common/Badge'; import LoadingSpinner from '../../components/common/LoadingSpinner'; import EmptyState from '../../components/common/EmptyState';
-export default function Team(){const users=useQuery({queryKey:['users'],queryFn:getUsers});const perf=useQuery({queryKey:['team-performance'],queryFn:teamPerformance});if(users.isLoading||perf.isLoading)return <LoadingSpinner/>;if(users.isError||perf.isError)return <EmptyState title="Unable to load team" message="Please refresh and try again."/>;return <div className="space-y-6"><div><h1 className="text-3xl font-bold">Team</h1><p className="text-slate-500">People and delivery performance.</p></div>{!users.data?.length?<EmptyState title="No team members" message="There are no users to display."/>:<Card className="overflow-x-auto"><table className="w-full min-w-[700px] text-left text-sm"><caption className="sr-only">Team members and task performance</caption><thead><tr className="border-b text-slate-500"><th scope="col" className="p-4">Name</th><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Assigned</th><th scope="col">Completed</th><th scope="col">In Progress</th><th scope="col">Overdue</th></tr></thead><tbody>{users.data.map(u=>{const p=perf.data?.find((x:any)=>x.id===u.id);return <tr key={u.id} className="border-b last:border-0 hover:bg-slate-50"><td className="p-4 font-semibold">{u.name}</td><td>{u.email}</td><td><Badge>{u.role}</Badge></td><td>{p?.assignedTasks||u._count?.assignedTasks||0}</td><td>{p?.completed||0}</td><td>{p?.inProgress||0}</td><td>{p?.overdue||0}</td></tr>})}</tbody></table></Card>}</div>}
+import { useQuery } from '@tanstack/react-query';
+import { fetchUsers } from '../../api/users.api';
+import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import Card from '../../components/common/Card';
+import EmptyState from '../../components/common/EmptyState';
+
+export default function Team() {
+  const { data, isLoading } = useQuery({ queryKey: ['users'], queryFn: () => fetchUsers(1, 100) });
+  if (isLoading) return <LoadingSpinner />;
+  const users = data?.data ?? [];
+  if (!users.length) return <EmptyState title="No team members" description="Invite your team to collaborate." />;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Team</h1>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {users.map((u: any) => (
+          <Card key={u.id} className="flex items-center justify-between">
+            <div>
+              <div className="font-medium">{u.name}</div>
+              <div className="text-sm text-gray-500">{u.email}</div>
+            </div>
+            <div className="text-sm text-gray-500">{u.role}</div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}

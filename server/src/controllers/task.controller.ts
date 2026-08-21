@@ -1,47 +1,71 @@
-import type { Request, Response } from 'express';
-import { createTaskSchema, taskQuerySchema, updateStatusSchema, updateTaskSchema } from '../validators/task.validator';
-import * as taskService from '../services/task.service';
-import { HttpError } from '../utils/httpError';
+import type { Request, Response, NextFunction } from 'express';
+import { createTask, getTasks, getTaskById, updateTask, updateTaskStatus, deleteTask } from '../services/task.service.js';
+import { successResponse } from '../utils/apiResponse.js';
 
-function user(req: Request) {
-  if (!req.user) throw new HttpError(401, 'Authentication required');
-  return req.user;
-}
+export const listTasks = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const page = Number(req.query.page || 1);
+    const limit = Number(req.query.limit || 20);
+    const search = typeof req.query.search === 'string' ? req.query.search : undefined;
+    const filters = {
+      page,
+      limit,
+      search,
+      status: req.query.status as any,
+      priority: req.query.priority as any,
+      assignedTo: req.query.assignedTo as string | undefined,
+      projectId: req.query.projectId as string | undefined
+    };
+    const result = await getTasks(filters);
+    successResponse(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
 
-export async function list(req: Request, res: Response) {
-  const u = user(req);
-  const query = taskQuerySchema.parse(req.query);
-  res.json({ success: true, ...(await taskService.listTasks(u.userId, u.role, query)) });
-}
+export const create = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = req.body;
+    const task = await createTask(data);
+    successResponse(res, { task }, 201);
+  } catch (error) {
+    next(error);
+  }
+};
 
-export async function get(req: Request, res: Response) {
-  const u = user(req);
-  res.json({ success: true, data: await taskService.getTask(req.params.id, u.userId, u.role) });
-}
+export const getTask = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const task = await getTaskById(req.params.id);
+    successResponse(res, { task });
+  } catch (error) {
+    next(error);
+  }
+};
 
-export async function create(req: Request, res: Response) {
-  const u = user(req);
-  if (u.role !== 'ADMIN') throw new HttpError(403, 'Admin access required');
-  const input = createTaskSchema.parse(req.body);
-  res.status(201).json({ success: true, data: await taskService.createTask(input) });
-}
+export const putTask = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const task = await updateTask(req.params.id, req.body);
+    successResponse(res, { task });
+  } catch (error) {
+    next(error);
+  }
+};
 
-export async function update(req: Request, res: Response) {
-  const u = user(req);
-  if (u.role !== 'ADMIN') throw new HttpError(403, 'Members may only change task status');
-  const input = updateTaskSchema.parse(req.body);
-  res.json({ success: true, data: await taskService.updateTask(req.params.id, input) });
-}
+export const patchStatus = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const status = req.body.status;
+    const task = await updateTaskStatus(req.params.id, status);
+    successResponse(res, { task });
+  } catch (error) {
+    next(error);
+  }
+};
 
-export async function status(req: Request, res: Response) {
-  const u = user(req);
-  const input = updateStatusSchema.parse(req.body);
-  res.json({ success: true, data: await taskService.updateTaskStatus(req.params.id, u.userId, u.role, input.status) });
-}
-
-export async function remove(req: Request, res: Response) {
-  const u = user(req);
-  if (u.role !== 'ADMIN') throw new HttpError(403, 'Admin access required');
-  await taskService.deleteTask(req.params.id);
-  res.json({ success: true, data: null });
-}
+export const removeTask = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await deleteTask(req.params.id);
+    successResponse(res, { message: 'Task deleted' });
+  } catch (error) {
+    next(error);
+  }
+};

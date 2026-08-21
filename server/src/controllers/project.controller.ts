@@ -1,77 +1,64 @@
 import type { Request, Response, NextFunction } from 'express';
-import * as projectService from '../services/project.service.js';
-import { errorResponse, successResponse } from '../utils/apiResponse.js';
-import { HttpError } from '../utils/httpError.js';
+import { createProject, getProjects, getProjectById, updateProject, archiveProject, deleteProject } from '../services/project.service.js';
+import { successResponse } from '../utils/apiResponse.js';
 
-function user(req: Request) {
-  if (!req.auth) throw new HttpError(401, 'Authentication required');
-  return req.auth;
-}
-
-export async function listProjects(req: Request, res: Response, next: NextFunction): Promise<void> {
+export const listProjects = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const u = user(req);
-    const { page = '1', limit = '20', search = '', status = '' } = req.query as Record<string, string>;
-    const result = await projectService.listProjects(u.userId, u.role, {
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || 20,
-      search: search || '',
-      status: status || ''
-    });
+    const page = Number(req.query.page || 1);
+    const limit = Number(req.query.limit || 20);
+    const result = await getProjects({ page, limit });
     successResponse(res, result);
   } catch (error) {
     next(error);
   }
-}
+};
 
-export async function getProject(req: Request, res: Response, next: NextFunction): Promise<void> {
+export const create = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const u = user(req);
-    const project = await projectService.getProject(req.params.id, u.userId, u.role);
-    successResponse(res, project);
+    const data = req.body;
+    const project = await createProject(data);
+    successResponse(res, { project }, 201);
   } catch (error) {
     next(error);
   }
-}
+};
 
-export async function createProject(req: Request, res: Response, next: NextFunction): Promise<void> {
+export const getProject = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const u = user(req);
-    const { title, description, deadline, status } = req.body as { title: string; description?: string; deadline?: string; status?: string };
-    const project = await projectService.createProject(u.userId, u.role, {
-      title,
-      description: description || null,
-      deadline: deadline || null,
-      status: status || 'ACTIVE'
-    });
-    successResponse(res, project, 201);
+    const id = String(req.params.id);
+    const project = await getProjectById(id);
+    successResponse(res, { project });
   } catch (error) {
     next(error);
   }
-}
+};
 
-export async function updateProject(req: Request, res: Response, next: NextFunction): Promise<void> {
+export const putProject = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const u = user(req);
-    const { title, description, deadline, status } = req.body as { title?: string; description?: string; deadline?: string; status?: string };
-    const project = await projectService.updateProject(req.params.id, u.userId, u.role, {
-      title,
-      description,
-      deadline,
-      status: status || ''
-    });
-    successResponse(res, project);
+    const id = String(req.params.id);
+    const project = await updateProject(id, req.body);
+    successResponse(res, { project });
   } catch (error) {
     next(error);
   }
-}
+};
 
-export async function deleteProject(req: Request, res: Response, next: NextFunction): Promise<void> {
+export const patchArchive = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const u = user(req);
-    await projectService.deleteProject(req.params.id, u.userId, u.role);
-    successResponse(res, { message: 'Project deleted successfully' });
+    const id = String(req.params.id);
+    const project = await archiveProject(id);
+    successResponse(res, { project });
   } catch (error) {
     next(error);
   }
-}
+};
+
+export const removeProject = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = String(req.params.id);
+    await deleteProject(id);
+    successResponse(res, { message: 'Project deleted' });
+  } catch (error) {
+    next(error);
+  }
+};

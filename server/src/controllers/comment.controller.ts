@@ -1,32 +1,48 @@
-import type { Request, Response } from 'express';
-import { createCommentSchema, updateCommentSchema } from '../validators/comment.validator';
-import * as commentService from '../services/comment.service';
-import { HttpError } from '../utils/httpError';
+import type { Request, Response, NextFunction } from 'express';
+import { getCommentsForTask, createComment, updateComment, deleteComment } from '../services/comment.service.js';
+import { successResponse } from '../utils/apiResponse.js';
 
-function user(req: Request) {
-  if (!req.user) throw new HttpError(401, 'Authentication required');
-  return req.user;
-}
+export const listComments = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const taskId = String(req.params.taskId);
+    const comments = await getCommentsForTask(taskId);
+    successResponse(res, { comments });
+  } catch (error) {
+    next(error);
+  }
+};
 
-export async function list(req: Request, res: Response) {
-  const u = user(req);
-  res.json({ success: true, data: await commentService.listComments(req.params.taskId, u.userId, u.role) });
-}
+export const create = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.auth) throw new Error('Authentication required');
+    const taskId = String(req.params.taskId);
+    const comment = await createComment(taskId, req.auth.userId, req.body.content);
+    successResponse(res, { comment }, 201);
+  } catch (error) {
+    next(error);
+  }
+};
 
-export async function create(req: Request, res: Response) {
-  const u = user(req);
-  const { content } = createCommentSchema.parse(req.body);
-  res.status(201).json({ success: true, data: await commentService.createComment(req.params.taskId, u.userId, u.role, content) });
-}
+export const putComment = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.auth) throw new Error('Authentication required');
+    const isAdmin = req.auth.role === 'ADMIN';
+    const id = String(req.params.id);
+    const comment = await updateComment(id, req.auth.userId, req.body.content, isAdmin);
+    successResponse(res, { comment });
+  } catch (error) {
+    next(error);
+  }
+};
 
-export async function update(req: Request, res: Response) {
-  const u = user(req);
-  const { content } = updateCommentSchema.parse(req.body);
-  res.json({ success: true, data: await commentService.updateComment(req.params.id, u.userId, u.role, content) });
-}
-
-export async function remove(req: Request, res: Response) {
-  const u = user(req);
-  await commentService.deleteComment(req.params.id, u.userId, u.role);
-  res.json({ success: true, data: null });
-}
+export const removeComment = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.auth) throw new Error('Authentication required');
+    const isAdmin = req.auth.role === 'ADMIN';
+    const id = String(req.params.id);
+    await deleteComment(id, req.auth.userId, isAdmin);
+    successResponse(res, { message: 'Comment deleted' });
+  } catch (error) {
+    next(error);
+  }
+};

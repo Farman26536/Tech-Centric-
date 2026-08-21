@@ -1,7 +1,28 @@
-import { ButtonHTMLAttributes } from 'react';
-import { LoaderCircle } from 'lucide-react';
+import React from 'react';
 
-type Props = ButtonHTMLAttributes<HTMLButtonElement> & { loading?: boolean };
-export default function Button({ className='', loading=false, disabled, children, ...props }: Props) {
-  return <button {...props} disabled={disabled || loading} aria-busy={loading || undefined} className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}>{loading && <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />}{children}</button>;
-}
+type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  loading?: boolean;
+};
+
+const ButtonBase = React.forwardRef<HTMLButtonElement, Props>(function Button({ variant = 'primary', loading, className = '', children, disabled, ...rest }, ref) {
+  const base = 'inline-flex items-center gap-2 px-3 py-2 rounded text-sm font-medium';
+  const styles: Record<string, string> = {
+    primary: 'bg-slate-900 text-white hover:bg-slate-800',
+    secondary: 'bg-slate-100 text-slate-700 hover:bg-slate-200',
+    danger: 'bg-red-500 text-white hover:bg-red-600',
+    ghost: 'bg-transparent text-slate-700 hover:bg-slate-100'
+  };
+  return (
+    <button
+      ref={ref}
+      className={`${base} ${styles[variant]} ${className}`}
+      disabled={disabled || loading}
+      {...rest}
+    >
+      {loading ? 'Loading...' : children}
+    </button>
+  );
+});
+export const Button = ButtonBase;
+export default ButtonBase;

@@ -1,17 +1,29 @@
 import type { NextFunction, Request, Response } from 'express';
-import { Role } from '@prisma/client';
-import { HttpError } from '../utils/httpError';
+import { prisma } from '../config/database.js';
+import { errorResponse } from '../utils/apiResponse.js';
 
-export function requireAuthenticatedUser(req: Request, _res: Response, next: NextFunction) {
-  if (!req.user?.userId || !req.user.role) {
-    return next(new HttpError(401, 'Authentication required'));
+export const requireTaskAssignmentOrAdmin = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.auth) {
+    errorResponse(res, 'Authentication required', 401);
+    return;
   }
-  next();
-}
 
-export function requireAdmin(req: Request, _res: Response, next: NextFunction) {
-  if (!req.user || req.user.role !== Role.ADMIN) {
-    return next(new HttpError(403, 'Admin access required'));
+  const taskId = String(req.params.id);
+  const task = await prisma.task.findUnique({ where: { id: taskId } });
+  if (!task) {
+    errorResponse(res, 'Task not found', 404);
+    return;
   }
+
+  if (req.auth.role === 'ADMIN') {
+    next();
+    return;
+  }
+
+  if (task.assignedToId !== req.auth.userId) {
+    errorResponse(res, 'You are not allowed to update this task', 403);
+    return;
+  }
+
   next();
-}
+};

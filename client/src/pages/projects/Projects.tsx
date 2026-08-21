@@ -1,11 +1,97 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { getProjects,createProject,deleteProject,archiveProject } from '../../api/projects.api';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Plus } from 'lucide-react';
+import { fetchProjects } from '../../api/projects.api';
+import { fetchTasks } from '../../api/tasks.api';
+import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import Button from '../../components/common/Button'; import Card from '../../components/common/Card'; import Input from '../../components/common/Input'; import EmptyState from '../../components/common/EmptyState'; import Badge from '../../components/common/Badge'; import LoadingSpinner from '../../components/common/LoadingSpinner'; import ConfirmDialog from '../../components/common/ConfirmDialog'; import toast from 'react-hot-toast';
-const schema=z.object({title:z.string().trim().min(2,'Title is required'),description:z.string().trim().max(1000,'Description is too long'),deadline:z.string().min(1,'Deadline is required')}); type Form=z.infer<typeof schema>;
-export default function Projects(){const {user}=useAuth();const qc=useQueryClient();const [show,setShow]=useState(false);const [pendingDelete,setPendingDelete]=useState<string|null>(null);const {data=[],isLoading,isError}=useQuery({queryKey:['projects'],queryFn:getProjects});const form=useForm<Form>({resolver:zodResolver(schema),defaultValues:{title:'',description:'',deadline:''}});const create=useMutation({mutationFn:createProject,onSuccess:()=>{qc.invalidateQueries({queryKey:['projects']});setShow(false);form.reset();toast.success('Project created')},onError:(e:any)=>toast.error(e?.response?.data?.message||'Unable to create project')});const del=useMutation({mutationFn:deleteProject,onSuccess:()=>{qc.invalidateQueries({queryKey:['projects']});setPendingDelete(null);toast.success('Project deleted')},onError:(e:any)=>toast.error(e?.response?.data?.message||'Unable to delete project')});const arch=useMutation({mutationFn:archiveProject,onSuccess:()=>{qc.invalidateQueries({queryKey:['projects']});toast.success('Project archived')},onError:(e:any)=>toast.error(e?.response?.data?.message||'Unable to archive project')});return <div className="space-y-6"><div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><h1 className="text-3xl font-bold">Projects</h1><p className="text-slate-500">Track delivery across active work.</p></div>{user?.role==='ADMIN'&&<Button onClick={()=>setShow(v=>!v)} className="w-fit bg-brand-600 text-white">{show?'Close form':'Create Project'}</Button>}</div>{show&&<Card className="p-6"><form onSubmit={form.handleSubmit(d=>create.mutate(d))} className="grid gap-4 md:grid-cols-2"><Input label="Title" {...form.register('title')} error={form.formState.errors.title?.message}/><Input type="date" label="Deadline" {...form.register('deadline')} error={form.formState.errors.deadline?.message}/><div className="md:col-span-2"><label htmlFor="description" className="text-sm font-medium text-slate-700">Description</label><textarea id="description" rows={4} {...form.register('description')} className="mt-1 w-full rounded-xl border border-slate-300 p-3 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"/><p className="mt-1 text-xs text-red-600">{form.formState.errors.description?.message}</p></div><Button type="submit" loading={create.isPending} className="w-fit bg-brand-600 text-white">Save Project</Button></form></Card>}{isLoading?<LoadingSpinner/>:isError?<EmptyState title="Unable to load projects" message="Please refresh and try again."/>:data.length===0?<EmptyState title="No projects found" message="Create your first project to get started."/>:<div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">{data.map(p=><Card key={p.id} className="p-6"><div className="flex items-start justify-between gap-3"><h2 className="text-lg font-bold">{p.title}</h2><Badge tone={p.status==='COMPLETED'?'green':p.status==='ARCHIVED'?'slate':'blue'}>{p.status}</Badge></div><p className="mt-2 line-clamp-2 text-sm text-slate-500">{p.description||'No description provided.'}</p><div className="mt-5"><div className="flex justify-between text-xs"><span>Progress</span><span>{p.progress}%</span></div><div className="mt-1 h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-brand-600" style={{width:`${p.progress}%`}}/></div></div><div className="mt-4 text-xs text-slate-500">{p.taskCount} tasks · Due {new Date(p.deadline).toLocaleDateString()}</div><div className="mt-5 flex flex-wrap gap-2"><Link to={`/projects/${p.id}`} className="rounded-xl bg-slate-100 px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500">View</Link>{user?.role==='ADMIN'&&<><Button onClick={()=>arch.mutate(p.id)} loading={arch.isPending&&arch.variables===p.id} className="bg-amber-100 text-amber-800">Archive</Button><Button onClick={()=>setPendingDelete(p.id)} className="bg-red-100 text-red-700">Delete</Button></>}</div></Card>)}</div>}<ConfirmDialog open={!!pendingDelete} title="Delete project?" message="This will permanently delete the project and its tasks. This action cannot be undone." confirmLabel="Delete project" loading={del.isPending} onClose={()=>setPendingDelete(null)} onConfirm={()=>pendingDelete&&del.mutate(pendingDelete)}/></div>}
+import Card from '../../components/common/Card';
+import StatusBadge from '../../components/common/StatusBadge';
+import ProgressBar from '../../components/common/ProgressBar';
+import Avatar from '../../components/common/Avatar';
+import EmptyState from '../../components/common/EmptyState';
+
+export default function Projects() {
+  const [q, setQ] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  const { data: projectsRes, isLoading: loadingProjects } = useQuery({ queryKey: ['projects'], queryFn: () => fetchProjects(1, 100) });
+  const { data: tasksRes, isLoading: loadingTasks } = useQuery({ queryKey: ['tasks'], queryFn: () => fetchTasks({}) });
+
+  const projects = projectsRes?.data ?? [];
+  const tasks = tasksRes?.data ?? [];
+    // defensive: ensure arrays
+    // (previous console warnings removed)
+    if (!Array.isArray(projects)) {
+      // Handle unexpected projects response shape
+    }
+    if (!Array.isArray(tasks)) {
+      // Handle unexpected tasks response shape
+    }
+
+  const projectsWithStats = useMemo(() => {
+    return projects.map((p: any) => {
+      const pts = tasks.filter((t: any) => String(t.projectId) === String(p.id));
+      const total = pts.length;
+      const done = pts.filter((t: any) => t.status === 'COMPLETED').length;
+      const percent = total ? Math.round((done / total) * 100) : 0;
+      return { ...p, totalTasks: total, completedTasks: done, percent };
+    });
+  }, [projects, tasks]);
+
+  const filtered = useMemo(() => {
+    return projectsWithStats.filter((p: any) => {
+      if (statusFilter !== 'all' && p.status !== statusFilter) return false;
+      if (q && !(`${p.name} ${p.description ?? ''}`.toLowerCase().includes(q.toLowerCase()))) return false;
+      return true;
+    });
+  }, [projectsWithStats, q, statusFilter]);
+
+  const isLoading = loadingProjects || loadingTasks;
+  if (isLoading) return <LoadingSpinner />;
+
+  if (!filtered.length) return <EmptyState title="No projects" description="No projects match your filters." />;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Projects</h1>
+          <div className="text-sm text-gray-500">Manage your projects and monitor progress.</div>
+        </div>
+        <div className="flex items-center gap-3">
+          <input aria-label="Search projects" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search projects..." className="border rounded px-3 py-2" />
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="border rounded px-2 py-2">
+            <option value="all">All</option>
+            <option value="ACTIVE">Active</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="ARCHIVED">Archived</option>
+          </select>
+          <Link to="/projects/new" className="bg-indigo-600 text-white px-3 py-2 rounded flex items-center gap-2"><Plus className="w-4 h-4" /> New Project</Link>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filtered.map((p: any) => (
+          <Card key={p.id} className="p-4 hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1">
+                <Link to={`/projects/${p.id}`} className="text-lg font-semibold text-gray-900 hover:underline">{p.name}</Link>
+                <div className="text-sm text-gray-500 mt-1">{p.description}</div>
+                <div className="mt-3">
+                  <ProgressBar percent={p.percent} />
+                </div>
+              </div>
+
+              <div className="w-36 text-right flex flex-col items-end gap-2">
+                <StatusBadge status={p.status} />
+                <div className="text-sm text-gray-500">{p.totalTasks} tasks</div>
+                <div className="text-xs text-gray-400">{p.dueDate ? new Date(p.dueDate).toLocaleDateString() : ''}</div>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}

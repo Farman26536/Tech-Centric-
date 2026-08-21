@@ -35,7 +35,8 @@ export const create = async (req: Request, res: Response, next: NextFunction) =>
 
 export const getTask = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const task = await getTaskById(req.params.id);
+    const id = String(req.params.id);
+    const task = await getTaskById(id);
     successResponse(res, { task });
   } catch (error) {
     next(error);
@@ -44,7 +45,8 @@ export const getTask = async (req: Request, res: Response, next: NextFunction) =
 
 export const putTask = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const task = await updateTask(req.params.id, req.body);
+    const id = String(req.params.id);
+    const task = await updateTask(id, req.body);
     successResponse(res, { task });
   } catch (error) {
     next(error);
@@ -54,7 +56,8 @@ export const putTask = async (req: Request, res: Response, next: NextFunction) =
 export const patchStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const status = req.body.status;
-    const task = await updateTaskStatus(req.params.id, status);
+    const id = String(req.params.id);
+    const task = await updateTaskStatus(id, status);
     successResponse(res, { task });
   } catch (error) {
     next(error);
@@ -63,7 +66,8 @@ export const patchStatus = async (req: Request, res: Response, next: NextFunctio
 
 export const removeTask = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await deleteTask(req.params.id);
+    const id = String(req.params.id);
+    await deleteTask(id);
     successResponse(res, { message: 'Task deleted' });
   } catch (error) {
     next(error);

@@ -8,7 +8,7 @@ export const requireTaskAssignmentOrAdmin = async (req: Request, res: Response, 
     return;
   }
 
-  const taskId = req.params.id;
+  const taskId = String(req.params.id);
   const task = await prisma.task.findUnique({ where: { id: taskId } });
   if (!task) {
     errorResponse(res, 'Task not found', 404);

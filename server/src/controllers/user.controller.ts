@@ -16,7 +16,8 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
 
 export const getUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const user = await getUserById(req.params.id);
+    const id = String(req.params.id);
+    const user = await getUserById(id);
     successResponse(res, { user });
   } catch (error) {
     next(error);
@@ -26,7 +27,8 @@ export const getUser = async (req: Request, res: Response, next: NextFunction) =
 export const putUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = req.body;
-    const user = await updateUser(req.params.id, data);
+    const id = String(req.params.id);
+    const user = await updateUser(id, data);
     successResponse(res, { user });
   } catch (error) {
     next(error);
@@ -35,7 +37,8 @@ export const putUser = async (req: Request, res: Response, next: NextFunction) =
 
 export const removeUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await deleteUser(req.params.id);
+    const id = String(req.params.id);
+    await deleteUser(id);
     successResponse(res, { message: 'User deleted' });
   } catch (error) {
     next(error);

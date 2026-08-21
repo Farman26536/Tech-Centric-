@@ -2,22 +2,27 @@ import React from 'react';
 
 type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
-  children?: React.ReactNode;
+  loading?: boolean;
 };
 
-export const Button = ({ variant = 'primary', className = '', children, ...rest }: Props) => {
+const ButtonBase = React.forwardRef<HTMLButtonElement, Props>(function Button({ variant = 'primary', loading, className = '', children, disabled, ...rest }, ref) {
   const base = 'inline-flex items-center gap-2 px-3 py-2 rounded text-sm font-medium';
   const styles: Record<string, string> = {
-    primary: 'bg-brand text-white hover:bg-blue-600',
-    secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+    primary: 'bg-slate-900 text-white hover:bg-slate-800',
+    secondary: 'bg-slate-100 text-slate-700 hover:bg-slate-200',
     danger: 'bg-red-500 text-white hover:bg-red-600',
-    ghost: 'bg-transparent text-gray-700 hover:bg-gray-100'
+    ghost: 'bg-transparent text-slate-700 hover:bg-slate-100'
   };
   return (
-    <button className={`${base} ${styles[variant]} ${className}`} {...rest}>
-      {children}
+    <button
+      ref={ref}
+      className={`${base} ${styles[variant]} ${className}`}
+      disabled={disabled || loading}
+      {...rest}
+    >
+      {loading ? 'Loading...' : children}
     </button>
   );
-};
-
-export default Button;
+});
+export const Button = ButtonBase;
+export default ButtonBase;

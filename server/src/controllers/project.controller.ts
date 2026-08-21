@@ -25,7 +25,8 @@ export const create = async (req: Request, res: Response, next: NextFunction) =>
 
 export const getProject = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const project = await getProjectById(req.params.id);
+    const id = String(req.params.id);
+    const project = await getProjectById(id);
     successResponse(res, { project });
   } catch (error) {
     next(error);
@@ -34,7 +35,8 @@ export const getProject = async (req: Request, res: Response, next: NextFunction
 
 export const putProject = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const project = await updateProject(req.params.id, req.body);
+    const id = String(req.params.id);
+    const project = await updateProject(id, req.body);
     successResponse(res, { project });
   } catch (error) {
     next(error);
@@ -43,7 +45,8 @@ export const putProject = async (req: Request, res: Response, next: NextFunction
 
 export const patchArchive = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const project = await archiveProject(req.params.id);
+    const id = String(req.params.id);
+    const project = await archiveProject(id);
     successResponse(res, { project });
   } catch (error) {
     next(error);
@@ -52,7 +55,8 @@ export const patchArchive = async (req: Request, res: Response, next: NextFuncti
 
 export const removeProject = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await deleteProject(req.params.id);
+    const id = String(req.params.id);
+    await deleteProject(id);
     successResponse(res, { message: 'Project deleted' });
   } catch (error) {
     next(error);

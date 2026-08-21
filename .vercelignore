@@ -1,0 +1,11 @@
+node_modules
+.git
+.gitignore
+README.md
+docker-compose.yml
+server/.env.local
+server/.env.example
+client/.env.local
+client/.env.example
+.env.local
+.env.example

@@ -1,0 +1,1 @@
+export class HttpError extends Error {\n  constructor(public statusCode: number, message: string) {\n    super(message);\n    this.name = 'HttpError';\n  }\n}\n

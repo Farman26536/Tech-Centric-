@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../utils/prisma.js';
 import { HttpError } from '../utils/httpError.js';
-
-const client = new PrismaClient();
 
 export async function listProjects(
   userId: string,
@@ -22,7 +20,7 @@ export async function listProjects(
 
     const skip = (filters.page - 1) * filters.limit;
     const [projects, total] = await Promise.all([
-      client.project.findMany({
+      prisma.project.findMany({
         where,
         select: {
           id: true,
@@ -38,7 +36,7 @@ export async function listProjects(
         skip,
         take: filters.limit
       }),
-      client.project.count({ where })
+      prisma.project.count({ where })
     ]);
 
     return {
@@ -51,7 +49,7 @@ export async function listProjects(
 }
 
 export async function getProject(projectId: string, userId: string, role: string) {
-  const project = await client.project.findUnique({
+  const project = await prisma.project.findUnique({
     where: { id: projectId },
     include: {
       tasks: {
@@ -83,7 +81,7 @@ export async function createProject(
     throw new HttpError(403, 'Only admins can create projects');
   }
 
-  const project = await client.project.create({
+  const project = await prisma.project.create({
     data: {
       title: input.title,
       description: input.description || null,
@@ -115,7 +113,7 @@ export async function updateProject(
     throw new HttpError(403, 'Only admins can update projects');
   }
 
-  const existing = await client.project.findUnique({ where: { id: projectId }, select: { id: true } });
+  const existing = await prisma.project.findUnique({ where: { id: projectId }, select: { id: true } });
   if (!existing) throw new HttpError(404, 'Project not found');
 
   const data: any = {};
@@ -124,7 +122,7 @@ export async function updateProject(
   if (input.deadline !== undefined) data.deadline = input.deadline ? new Date(input.deadline) : null;
   if (input.status !== undefined) data.status = input.status;
 
-  const project = await client.project.update({
+  const project = await prisma.project.update({
     where: { id: projectId },
     data,
     select: {
@@ -147,7 +145,7 @@ export async function deleteProject(projectId: string, userId: string, role: str
     throw new HttpError(403, 'Only admins can delete projects');
   }
 
-  const existing = await client.project.findUnique({
+  const existing = await prisma.project.findUnique({
     where: { id: projectId },
     select: { id: true, tasks: { select: { id: true } } }
   });
@@ -158,5 +156,5 @@ export async function deleteProject(projectId: string, userId: string, role: str
     throw new HttpError(400, 'Cannot delete project with existing tasks');
   }
 
-  await client.project.delete({ where: { id: projectId } });
+  await prisma.project.delete({ where: { id: projectId } });
 }

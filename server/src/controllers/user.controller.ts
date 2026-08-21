@@ -1,21 +1,22 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as userService from '../services/user.service.js';
 import { errorResponse, successResponse } from '../utils/apiResponse.js';
+import { HttpError } from '../utils/httpError.js';
 
 function user(req: Request) {
-  if (!req.auth) throw new Error('Authentication required');
+  if (!req.auth) throw new HttpError(401, 'Authentication required');
   return req.auth;
 }
 
 export async function listUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const u = user(req);
-    const { page = 1, limit = 20, search = '', role = '' } = req.query as { page?: string; limit?: string; search?: string; role?: string };
+    const { page = '1', limit = '20', search = '', role = '' } = req.query as Record<string, string>;
     const result = await userService.listUsers(u.userId, u.role, {
       page: parseInt(page) || 1,
       limit: parseInt(limit) || 20,
       search: search || '',
-      role: (role as any) || ''
+      role: role || ''
     });
     successResponse(res, result);
   } catch (error) {

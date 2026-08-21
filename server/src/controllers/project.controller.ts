@@ -1,21 +1,22 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as projectService from '../services/project.service.js';
 import { errorResponse, successResponse } from '../utils/apiResponse.js';
+import { HttpError } from '../utils/httpError.js';
 
 function user(req: Request) {
-  if (!req.auth) throw new Error('Authentication required');
+  if (!req.auth) throw new HttpError(401, 'Authentication required');
   return req.auth;
 }
 
 export async function listProjects(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const u = user(req);
-    const { page = 1, limit = 20, search = '', status = '' } = req.query as { page?: string; limit?: string; search?: string; status?: string };
+    const { page = '1', limit = '20', search = '', status = '' } = req.query as Record<string, string>;
     const result = await projectService.listProjects(u.userId, u.role, {
       page: parseInt(page) || 1,
       limit: parseInt(limit) || 20,
       search: search || '',
-      status: (status as any) || ''
+      status: status || ''
     });
     successResponse(res, result);
   } catch (error) {
@@ -41,7 +42,7 @@ export async function createProject(req: Request, res: Response, next: NextFunct
       title,
       description: description || null,
       deadline: deadline || null,
-      status: (status as any) || 'ACTIVE'
+      status: status || 'ACTIVE'
     });
     successResponse(res, project, 201);
   } catch (error) {
@@ -57,7 +58,7 @@ export async function updateProject(req: Request, res: Response, next: NextFunct
       title,
       description,
       deadline,
-      status: (status as any) || ''
+      status: status || ''
     });
     successResponse(res, project);
   } catch (error) {

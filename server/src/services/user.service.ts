@@ -1,8 +1,5 @@
-import { Role, prisma } from '@prisma/client';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../utils/prisma.js';
 import { HttpError } from '../utils/httpError.js';
-
-const client = new PrismaClient();
 
 export async function listUsers(
   userId: string,
@@ -23,14 +20,14 @@ export async function listUsers(
 
     const skip = (filters.page - 1) * filters.limit;
     const [users, total] = await Promise.all([
-      client.user.findMany({
+      prisma.user.findMany({
         where,
         select: { id: true, name: true, email: true, role: true, createdAt: true },
         orderBy: { createdAt: 'desc' },
         skip,
         take: filters.limit
       }),
-      client.user.count({ where })
+      prisma.user.count({ where })
     ]);
 
     return {
@@ -43,7 +40,7 @@ export async function listUsers(
 }
 
 export async function getUser(userId: string, requesterRole: string) {
-  const user = await client.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { id: true, name: true, email: true, role: true, createdAt: true, updatedAt: true }
   });
@@ -53,7 +50,7 @@ export async function getUser(userId: string, requesterRole: string) {
 }
 
 export async function getCurrentUser(userId: string) {
-  const user = await client.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { id: true, name: true, email: true, role: true, createdAt: true, updatedAt: true }
   });
@@ -72,14 +69,14 @@ export async function updateUser(
     throw new HttpError(403, 'You can only update your own profile');
   }
 
-  const existing = await client.user.findUnique({ where: { id: userId }, select: { id: true } });
+  const existing = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
   if (!existing) throw new HttpError(404, 'User not found');
 
   const data: any = {};
   if (input.name !== undefined) data.name = input.name;
   if (input.email !== undefined) data.email = input.email;
 
-  const updated = await client.user.update({
+  const updated = await prisma.user.update({
     where: { id: userId },
     data,
     select: { id: true, name: true, email: true, role: true, createdAt: true, updatedAt: true }
@@ -93,10 +90,10 @@ export async function updateUserRole(userId: string, requesterRole: string, newR
     throw new HttpError(403, 'Only admins can change user roles');
   }
 
-  const existing = await client.user.findUnique({ where: { id: userId }, select: { id: true } });
+  const existing = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
   if (!existing) throw new HttpError(404, 'User not found');
 
-  const updated = await client.user.update({
+  const updated = await prisma.user.update({
     where: { id: userId },
     data: { role: newRole },
     select: { id: true, name: true, email: true, role: true, createdAt: true, updatedAt: true }

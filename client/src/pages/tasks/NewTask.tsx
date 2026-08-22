@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import Card from '../../components/common/Card';
 import { FormInput } from '../../components/common/FormInput';
 import { Button } from '../../components/common/Button';
@@ -8,13 +8,19 @@ import { createTask } from '../../api/tasks.api';
 import { fetchProjects } from '../../api/projects.api';
 import { useQuery } from '@tanstack/react-query';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function NewTask() {
+  const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [projectId, setProjectId] = useState('');
   const [priority, setPriority] = useState<'LOW'|'MEDIUM'|'HIGH'>('MEDIUM');
   const navigate = useNavigate();
+
+  if (!user || user.role !== 'ADMIN') {
+    return <Navigate to="/403" replace />;
+  }
 
   const { data: projectsRes, isLoading: loadingProjects } = useQuery({ queryKey: ['projects'], queryFn: () => fetchProjects(1, 100) });
   const projects = projectsRes?.data ?? [];

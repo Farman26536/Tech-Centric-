@@ -1,16 +1,22 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import Card from '../../components/common/Card';
 import { FormInput } from '../../components/common/FormInput';
 import { Button } from '../../components/common/Button';
 import { createProject } from '../../api/projects.api';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function NewProject() {
+  const { user } = useAuth();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const navigate = useNavigate();
+
+  if (!user || user.role !== 'ADMIN') {
+    return <Navigate to="/403" replace />;
+  }
 
   const mutation = useMutation({
     mutationFn: (payload: any) => createProject(payload),

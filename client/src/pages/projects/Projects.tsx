@@ -10,8 +10,11 @@ import StatusBadge from '../../components/common/StatusBadge';
 import ProgressBar from '../../components/common/ProgressBar';
 import Avatar from '../../components/common/Avatar';
 import EmptyState from '../../components/common/EmptyState';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function Projects() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
   const [q, setQ] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -67,7 +70,7 @@ export default function Projects() {
             <option value="COMPLETED">Completed</option>
             <option value="ARCHIVED">Archived</option>
           </select>
-          <Link to="/projects/new" className="bg-indigo-600 text-white px-3 py-2 rounded flex items-center gap-2"><Plus className="w-4 h-4" /> New Project</Link>
+          {isAdmin && <Link to="/projects/new" className="bg-indigo-600 text-white px-3 py-2 rounded flex items-center gap-2"><Plus className="w-4 h-4" /> New Project</Link>}
         </div>
       </div>
 

@@ -7,6 +7,7 @@ import {
   archiveProject,
   deleteProject,
 } from '../services/project.service.js';
+import { createProjectSchema } from '../validators/project.validator.js';
 
 import { successResponse } from '../utils/apiResponse.js';
 
@@ -33,9 +34,9 @@ export const create = async (
   next: NextFunction
 ) => {
   try {
-    const data = req.body;
+    const data = createProjectSchema.parse(req.body);
 
-    const project = await createProject(data);
+    const project = await createProject({ ...data, actorId: req.auth?.userId });
 
     successResponse(res, { project }, 201);
   } catch (error) {

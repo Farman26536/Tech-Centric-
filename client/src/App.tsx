@@ -56,11 +56,13 @@ export default function App() {
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/projects" element={<Projects />} />
-            <Route path="/projects/new" element={<NewProject />} />
             <Route path="/projects/:id" element={<ProjectDetails />} />
             <Route path="/tasks" element={<Tasks />} />
-            <Route path="/tasks/new" element={<NewTask />} />
             <Route path="/tasks/:id" element={<TaskDetails />} />
+            <Route element={<AdminRoute />}>
+              <Route path="/projects/new" element={<NewProject />} />
+              <Route path="/tasks/new" element={<NewTask />} />
+            </Route>
             <Route path="/team" element={<Team />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/analytics" element={<Analytics />} />

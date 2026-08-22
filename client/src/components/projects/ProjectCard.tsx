@@ -10,7 +10,8 @@ interface Props {
 }
 
 const statusColors: Record<Project['status'], string> = {
-  ACTIVE: 'border-green-200 bg-green-50 text-green-700',
+  // Make ACTIVE status visually match the sidebar active style (indigo accent)
+  ACTIVE: 'bg-indigo-50 text-indigo-600 border-l-4 border-indigo-600 pl-2 shadow-sm',
   ON_HOLD: 'border-yellow-200 bg-yellow-50 text-yellow-700',
   COMPLETED: 'border-blue-200 bg-blue-50 text-blue-700',
   ARCHIVED: 'border-gray-200 bg-gray-50 text-gray-700'
@@ -30,7 +31,7 @@ export default function ProjectCard({ project, taskCount = 0, onOpen, onEdit, on
               <p className="mt-1 line-clamp-2 text-sm text-slate-500">{project.description || 'No description'}</p>
             </div>
           </div>
-          <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${statusColors[project.status]}`}>
+          <span className={`shrink-0 rounded-md border px-3 py-1 text-xs font-semibold ${statusColors[project.status]}`}>
             {project.status.replace('_', ' ')}
           </span>
         </div>

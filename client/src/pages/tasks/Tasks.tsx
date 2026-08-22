@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { fetchTasks } from '../../api/tasks.api';
 import { fetchProjects } from '../../api/projects.api';
 import { fetchUsers } from '../../api/users.api';
@@ -9,104 +8,20 @@ import { Link } from 'react-router-dom';
 import Card from '../../components/common/Card';
 import StatusBadge from '../../components/common/StatusBadge';
 import Avatar from '../../components/common/Avatar';
-import EmptyState from '../../components/common/EmptyState';
+import { Plus, ArrowDownUp, AlertTriangle } from 'lucide-react';
 
 export default function Tasks() {
-  const [q, setQ] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [priorityFilter, setPriorityFilter] = useState<string>('all');
-  const [projectFilter, setProjectFilter] = useState<string>('all');
-
-  const { data: tasksRes, isLoading: loadingTasks } = useQuery({ queryKey: ['tasks'], queryFn: () => fetchTasks({}) });
-  const { data: projectsRes } = useQuery({ queryKey: ['projects'], queryFn: () => fetchProjects(1, 100) });
-  const { data: usersRes } = useQuery({ queryKey: ['users'], queryFn: () => fetchUsers(1, 100) });
-
-  const tasks = tasksRes?.data ?? [];
-  const projects = projectsRes?.data ?? [];
-  const users = usersRes?.data ?? [];
-
-  // defensive checks for API shapes (console warnings removed)
-  if (!Array.isArray(tasks)) {
-    // unexpected shape
-  }
-  if (!Array.isArray(projects)) {
-    // unexpected shape
-  }
-  if (!Array.isArray(users)) {
-    // unexpected shape
-  }
-  const usersMap = useMemo(() => Object.fromEntries((users || []).map((u: any) => [u.id, u])), [users]);
-  const projectsMap = useMemo(() => Object.fromEntries((projects || []).map((p: any) => [p.id, p])), [projects]);
-
-  const filtered = useMemo(() => {
-    return (tasks || []).filter((t: any) => {
-      if (statusFilter !== 'all' && t.status !== statusFilter) return false;
-      if (priorityFilter !== 'all' && t.priority !== priorityFilter) return false;
-      if (projectFilter !== 'all' && String(t.projectId) !== projectFilter) return false;
-      if (q && !(`${t.title} ${t.description ?? ''}`.toLowerCase().includes(q.toLowerCase()))) return false;
-      return true;
-    });
-  }, [tasks, statusFilter, priorityFilter, projectFilter, q]);
-
-  const isLoading = loadingTasks;
-  if (isLoading) return <LoadingSpinner />;
-
-  if (!filtered.length) return <EmptyState title="No tasks" description="No tasks match your filters." />;
-
-  const now = new Date();
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Tasks</h1>
-          <div className="text-sm text-gray-500">All tasks across projects and team members.</div>
-        </div>
-        <div className="flex items-center gap-3">
-          <input aria-label="Search tasks" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search tasks..." className="border rounded px-3 py-2" />
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="border rounded px-2 py-2">
-            <option value="all">All</option>
-            <option value="TODO">Todo</option>
-            <option value="IN_PROGRESS">In Progress</option>
-            <option value="COMPLETED">Completed</option>
-          </select>
-          <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} className="border rounded px-2 py-2">
-            <option value="all">All priorities</option>
-            <option value="LOW">Low</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="HIGH">High</option>
-          </select>
-          <select value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)} className="border rounded px-2 py-2">
-            <option value="all">All projects</option>
-            {projects.map((p: any) => <option key={p.id} value={String(p.id)}>{p.name}</option>)}
-          </select>
-          <Link to="/tasks/new" className="bg-indigo-600 text-white px-3 py-2 rounded flex items-center gap-2"><Plus className="w-4 h-4" /> New Task</Link>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        {filtered.map((t: any) => {
-          const assignee = t.assignedToId ? usersMap[t.assignedToId] : null;
-          const project = projectsMap[t.projectId];
-          const isOverdue = t.dueDate && new Date(t.dueDate) < now && t.status !== 'COMPLETED';
-          return (
-            <Card key={t.id} className={`p-4 hover:shadow-md transition-shadow ${isOverdue ? 'border border-red-100' : ''}`}>
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1">
-                  <Link to={`/tasks/${t.id}`} className={`text-lg font-medium ${isOverdue ? 'text-red-600' : 'text-gray-900'} hover:underline`}>{t.title}</Link>
-                  <div className="text-sm text-gray-500">{project?.name ?? ''}</div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="text-sm text-gray-500">{t.dueDate ? new Date(t.dueDate).toLocaleDateString() : ''}</div>
-                  <div><StatusBadge status={t.status} /></div>
-                  <div><Avatar name={assignee ? assignee.name : 'Unassigned'} size={36} /></div>
-                </div>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
-    </div>
-  );
+  const [q,setQ]=useState(''); const [status,setStatus]=useState('all'); const [priority,setPriority]=useState('all'); const [project,setProject]=useState('all'); const [sortBy,setSortBy]=useState('createdAt'); const [sortOrder,setSortOrder]=useState('desc'); const [overdue,setOverdue]=useState(false);
+  const query=useInfiniteQuery({queryKey:['tasks-enhanced',q,status,priority,project,sortBy,sortOrder,overdue],initialPageParam:1,queryFn:({pageParam})=>fetchTasks({page:pageParam,limit:12,search:q||undefined,status:status==='all'?undefined:status,priority:priority==='all'?undefined:priority,projectId:project==='all'?undefined:project,sortBy,sortOrder,overdue:overdue||undefined}),getNextPageParam:(last:any)=>last.meta.page<last.meta.pages?last.meta.page+1:undefined});
+  const {data:projectsRes}=useInfiniteQuery({queryKey:['projects-task-filter'],initialPageParam:1,queryFn:({pageParam})=>fetchProjects(pageParam,100),getNextPageParam:()=>undefined});
+  const {data:usersRes}=useInfiniteQuery({queryKey:['users-task-filter'],initialPageParam:1,queryFn:({pageParam})=>fetchUsers(pageParam,100),getNextPageParam:()=>undefined});
+  const tasks=query.data?.pages.flatMap((p:any)=>p.data)??[]; const projects=projectsRes?.pages.flatMap((p:any)=>p.data)??[]; const users=usersRes?.pages.flatMap((p:any)=>p.data)??[];
+  const usersMap=useMemo(()=>Object.fromEntries(users.map((u:any)=>[u.id,u])),[users]); const projectsMap=useMemo(()=>Object.fromEntries(projects.map((p:any)=>[p.id,p])),[projects]);
+  if(query.isLoading)return <LoadingSpinner/>;
+  return <div className="space-y-5">
+   <div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-2xl font-semibold">Tasks</h1><p className="text-sm text-slate-500">Search, filter, sort and progressively load tasks.</p></div><Link to="/tasks/new" className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white"><Plus className="mr-1 inline" size={16}/>New Task</Link></div>
+   <Card><div className="grid gap-2 md:grid-cols-7"><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search title or description..." className="rounded-lg border px-3 py-2 md:col-span-2"/><select value={status} onChange={e=>setStatus(e.target.value)} className="rounded-lg border px-2"><option value="all">All status</option><option value="TODO">To do</option><option value="IN_PROGRESS">In progress</option><option value="COMPLETED">Completed</option></select><select value={priority} onChange={e=>setPriority(e.target.value)} className="rounded-lg border px-2"><option value="all">All priority</option><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option></select><select value={project} onChange={e=>setProject(e.target.value)} className="rounded-lg border px-2"><option value="all">All projects</option>{projects.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select><select value={sortBy} onChange={e=>setSortBy(e.target.value)} className="rounded-lg border px-2"><option value="createdAt">Created</option><option value="dueDate">Due date</option><option value="priority">Priority</option><option value="title">Title</option></select><button onClick={()=>setSortOrder(v=>v==='asc'?'desc':'asc')} className="rounded-lg border px-3 py-2"><ArrowDownUp className="inline" size={15}/> {sortOrder.toUpperCase()}</button></div><label className="mt-3 inline-flex items-center gap-2 text-sm"><input type="checkbox" checked={overdue} onChange={e=>setOverdue(e.target.checked)}/>Only overdue</label></Card>
+   <div className="space-y-3">{tasks.map((t:any)=>{const a=t.assignedToId?usersMap[t.assignedToId]:null; const p=projectsMap[t.projectId]; const isOver=t.dueDate&&new Date(t.dueDate)<new Date()&&t.status!=='COMPLETED'; return <Card key={t.id} className={`p-4 ${isOver?'border-red-200':''}`}><div className="flex items-center gap-4"><div className="flex-1 min-w-0"><Link to={`/tasks/${t.id}`} className={`font-semibold hover:underline ${isOver?'text-red-600':''}`}>{t.title}</Link><div className="text-xs text-slate-500">{p?.name??'Project'} · {t.dueDate?new Date(t.dueDate).toLocaleDateString():'No due date'}</div></div>{isOver&&<AlertTriangle className="text-red-500" size={18}/>}<span className={`rounded-full px-2 py-1 text-xs font-semibold ${t.priority==='HIGH'?'bg-red-100 text-red-700':t.priority==='MEDIUM'?'bg-amber-100 text-amber-700':'bg-slate-100 text-slate-700'}`}>{t.priority}</span><StatusBadge status={t.status}/><Avatar name={a?.name??'Unassigned'} size={34}/></div></Card>})}</div>
+   {query.hasNextPage&&<div className="text-center"><button onClick={()=>void query.fetchNextPage()} disabled={query.isFetchingNextPage} className="rounded-lg border px-4 py-2 text-sm">{query.isFetchingNextPage?'Loading…':'Load more'}</button></div>}
+  </div>;
 }

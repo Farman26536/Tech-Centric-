@@ -7,63 +7,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String    @id @default(uuid()) @db.Uuid
-  name          String    @db.VarChar(120)
-  email         String    @unique @db.VarChar(255)
-  passwordHash  String    @db.VarChar(255)
-  role          Role
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  comments      Comment[] @relation("UserComments")
-  assignedTasks Task[]    @relation("UserAssignedTasks")
-
-  @@index([role])
-}
-
-model Project {
-  id          String        @id @default(uuid()) @db.Uuid
-  name        String        @db.VarChar(255)
-  description String?
-  status      ProjectStatus @default(ACTIVE)
-  startDate   DateTime?
-  dueDate     DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  tasks       Task[]
-}
-
-model Task {
-  id           String       @id @default(uuid()) @db.Uuid
-  title        String       @db.VarChar(255)
-  description  String?
-  priority     TaskPriority @default(MEDIUM)
-  status       TaskStatus   @default(TODO)
-  dueDate      DateTime?
-  completedAt  DateTime?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  projectId    String       @db.Uuid
-  assignedToId String?      @db.Uuid
-  comments     Comment[]
-  assignedTo   User?        @relation("UserAssignedTasks", fields: [assignedToId], references: [id])
-  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-}
-
-model Comment {
-  id        String   @id @default(uuid()) @db.Uuid
-  content   String
-  authorId  String   @db.Uuid
-  taskId    String   @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  author    User     @relation("UserComments", fields: [authorId], references: [id], onDelete: Cascade)
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-}
-
 enum Role {
   ADMIN
   MEMBER
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String   @db.VarChar(120)
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @db.VarChar(255)
+  role         Role
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Tasks assigned to this user
+  assignedTasks Task[] @relation("UserAssignedTasks")
+
+  // Comments authored by this user
+  comments Comment[] @relation("UserComments")
+  notifications Notification[]
+  activities ActivityLog[] @relation("ActivityActor")
+  attachments Attachment[]
+
+  @@index([role])
 }
 
 enum ProjectStatus {
@@ -82,4 +49,112 @@ enum TaskStatus {
   TODO
   IN_PROGRESS
   COMPLETED
+}
+
+model Project {
+  id          String         @id @default(uuid()) @db.Uuid
+  name        String         @db.VarChar(255)
+  description String?        @db.Text
+  status      ProjectStatus  @default(ACTIVE)
+  startDate   DateTime?
+  dueDate     DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  tasks Task[]
+  activities ActivityLog[]
+}
+
+model Task {
+  id          String       @id @default(uuid()) @db.Uuid
+  title       String       @db.VarChar(255)
+  description String?      @db.Text
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus   @default(TODO)
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String  @db.Uuid
+
+  assignedTo   User?  @relation("UserAssignedTasks", fields: [assignedToId], references: [id])
+  assignedToId String? @db.Uuid
+
+  comments Comment[]
+  attachments Attachment[]
+  activities ActivityLog[]
+}
+
+model Comment {
+  id        String   @id @default(uuid()) @db.Uuid
+  content   String   @db.Text
+  author    User     @relation("UserComments", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String   @db.Uuid
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+enum NotificationType {
+  TASK_DUE
+  TASK_OVERDUE
+  COMMENT
+  ASSIGNMENT
+  SYSTEM
+}
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String           @db.Uuid
+  title     String           @db.VarChar(255)
+  message   String           @db.Text
+  type      NotificationType @default(SYSTEM)
+  read      Boolean          @default(false)
+  emailSent Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  readAt    DateTime?
+
+  @@index([userId, read])
+  @@index([createdAt])
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  actor     User?   @relation("ActivityActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actorId   String?  @db.Uuid
+  action    String   @db.VarChar(80)
+  entity    String   @db.VarChar(40)
+  entityId  String?  @db.Uuid
+  message   String   @db.Text
+  metadata  Json?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String?  @db.Uuid
+  task      Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String?  @db.Uuid
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entity, entityId])
+  @@index([projectId])
+  @@index([taskId])
+}
+
+model Attachment {
+  id        String   @id @default(uuid()) @db.Uuid
+  fileName  String   @db.VarChar(255)
+  mimeType  String   @db.VarChar(120)
+  size      Int
+  data      String   @db.Text
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String   @db.Uuid
+  uploadedBy User    @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  uploadedById String @db.Uuid
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
 }

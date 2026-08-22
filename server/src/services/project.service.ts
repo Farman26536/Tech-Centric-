@@ -1,4 +1,5 @@
 import { prisma } from '../config/database.js';
+import { logActivity } from './activity.service.js';
 import type { ProjectStatus } from '@prisma/client';
 
 export const createProject = async (data: {
@@ -6,8 +7,10 @@ export const createProject = async (data: {
   description?: string;
   startDate?: Date | null;
   dueDate?: Date | null;
+  actorId?: string;
 }) => {
-  const project = await prisma.project.create({ data });
+  const project = await prisma.project.create({ data: { name: data.name, description: data.description, startDate: data.startDate, dueDate: data.dueDate } });
+  await logActivity({ actorId: data.actorId, action: 'PROJECT_CREATED', entity: 'PROJECT', entityId: project.id, projectId: project.id, message: `Created project "${project.name}"` });
   return project;
 };
 

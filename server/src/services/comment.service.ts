@@ -1,11 +1,14 @@
 import { prisma } from '../config/database.js';
+import { logActivity } from './activity.service.js';
 
 export const getCommentsForTask = async (taskId: string) => {
   return prisma.comment.findMany({ where: { taskId }, orderBy: { createdAt: 'asc' } });
 };
 
 export const createComment = async (taskId: string, authorId: string, content: string) => {
-  return prisma.comment.create({ data: { taskId, authorId, content } });
+  const comment = await prisma.comment.create({ data: { taskId, authorId, content } });
+  await logActivity({ actorId: authorId, action: 'COMMENT_ADDED', entity: 'COMMENT', entityId: comment.id, taskId, message: 'Added a task comment' });
+  return comment;
 };
 
 export const updateComment = async (id: string, authorId: string, content: string, isAdmin = false) => {

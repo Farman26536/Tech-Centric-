@@ -36,7 +36,7 @@ export const getProject = async (req: Request, res: Response, next: NextFunction
 export const putProject = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = String(req.params.id);
-    const project = await updateProject(id, req.body);
+    const project = await updateProject(id, req.body, req.auth?.userId);
     successResponse(res, { project });
   } catch (error) {
     next(error);

@@ -7,7 +7,9 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(32),
   JWT_EXPIRES_IN: z.string().min(1).default('7d'),
-  CLIENT_URL: z.string().url().default('http://localhost:5173')
+  CLIENT_URL: z.string().url().default('http://localhost:5173'),
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().optional()
 });
 
 const parsed = envSchema.safeParse(process.env);

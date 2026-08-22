@@ -7,27 +7,63 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id            String    @id @default(uuid()) @db.Uuid
+  name          String    @db.VarChar(120)
+  email         String    @unique @db.VarChar(255)
+  passwordHash  String    @db.VarChar(255)
+  role          Role
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  comments      Comment[] @relation("UserComments")
+  assignedTasks Task[]    @relation("UserAssignedTasks")
+
+  @@index([role])
+}
+
+model Project {
+  id          String        @id @default(uuid()) @db.Uuid
+  name        String        @db.VarChar(255)
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  startDate   DateTime?
+  dueDate     DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  tasks       Task[]
+}
+
+model Task {
+  id           String       @id @default(uuid()) @db.Uuid
+  title        String       @db.VarChar(255)
+  description  String?
+  priority     TaskPriority @default(MEDIUM)
+  status       TaskStatus   @default(TODO)
+  dueDate      DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  projectId    String       @db.Uuid
+  assignedToId String?      @db.Uuid
+  comments     Comment[]
+  assignedTo   User?        @relation("UserAssignedTasks", fields: [assignedToId], references: [id])
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id        String   @id @default(uuid()) @db.Uuid
+  content   String
+  authorId  String   @db.Uuid
+  taskId    String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author    User     @relation("UserComments", fields: [authorId], references: [id], onDelete: Cascade)
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
 enum Role {
   ADMIN
   MEMBER
-}
-
-model User {
-  id           String   @id @default(uuid()) @db.Uuid
-  name         String   @db.VarChar(120)
-  email        String   @unique @db.VarChar(255)
-  passwordHash String   @db.VarChar(255)
-  role         Role
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  // Tasks assigned to this user
-  assignedTasks Task[] @relation("UserAssignedTasks")
-
-  // Comments authored by this user
-  comments Comment[] @relation("UserComments")
-
-  @@index([role])
 }
 
 enum ProjectStatus {
@@ -46,48 +82,4 @@ enum TaskStatus {
   TODO
   IN_PROGRESS
   COMPLETED
-}
-
-model Project {
-  id          String         @id @default(uuid()) @db.Uuid
-  name        String         @db.VarChar(255)
-  description String?        @db.Text
-  status      ProjectStatus  @default(ACTIVE)
-  startDate   DateTime?
-  dueDate     DateTime?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-
-  tasks Task[]
-}
-
-model Task {
-  id          String       @id @default(uuid()) @db.Uuid
-  title       String       @db.VarChar(255)
-  description String?      @db.Text
-  priority    TaskPriority @default(MEDIUM)
-  status      TaskStatus   @default(TODO)
-  dueDate     DateTime?
-  completedAt DateTime?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  projectId String  @db.Uuid
-
-  assignedTo   User?  @relation("UserAssignedTasks", fields: [assignedToId], references: [id])
-  assignedToId String? @db.Uuid
-
-  comments Comment[]
-}
-
-model Comment {
-  id        String   @id @default(uuid()) @db.Uuid
-  content   String   @db.Text
-  author    User     @relation("UserComments", fields: [authorId], references: [id], onDelete: Cascade)
-  authorId  String   @db.Uuid
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  taskId    String   @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }

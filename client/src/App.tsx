@@ -14,6 +14,10 @@ import TaskDetails from './pages/tasks/TaskDetails';
 import NewTask from './pages/tasks/NewTask';
 import Team from './pages/users/Team';
 import Profile from './pages/users/Profile';
+import Analytics from './pages/analytics/Analytics';
+import Calendar from './pages/calendar/Calendar';
+import Reports from './pages/reports/Reports';
+import Activity from './pages/activity/Activity';
 
 const FoundationPage = () => (
   <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
@@ -51,6 +55,10 @@ export default function App() {
             <Route path="/tasks/new" element={<NewTask />} />
             <Route path="/tasks/:id" element={<TaskDetails />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/calendar" element={<Calendar />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/activity" element={<Activity />} />
             <Route element={<AdminRoute />}>
               <Route path="/team" element={<Team />} />
             </Route>

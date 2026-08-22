@@ -12,6 +12,7 @@ import { commentRouter } from './routes/comment.routes.js';
 import { dashboardRouter } from './routes/dashboard.routes.js';
 import { notFoundHandler } from './middleware/notFound.middleware.js';
 import { errorHandler } from './middleware/error.middleware.js';
+import { featureRouter } from './routes/features.routes.js';
 
 export const app = express();
 
@@ -33,5 +34,6 @@ app.use('/api/projects', projectRouter);
 app.use('/api/tasks', taskRouter);
 app.use('/api', commentRouter);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/api/features', featureRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);

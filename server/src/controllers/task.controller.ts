@@ -14,7 +14,10 @@ export const listTasks = async (req: Request, res: Response, next: NextFunction)
       status: req.query.status as any,
       priority: req.query.priority as any,
       assignedTo: req.query.assignedTo as string | undefined,
-      projectId: req.query.projectId as string | undefined
+      projectId: req.query.projectId as string | undefined,
+      sortBy: req.query.sortBy as any,
+      sortOrder: req.query.sortOrder as any,
+      overdue: req.query.overdue === 'true'
     };
     const result = await getTasks(filters);
     successResponse(res, result);
@@ -26,7 +29,7 @@ export const listTasks = async (req: Request, res: Response, next: NextFunction)
 export const create = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = req.body;
-    const task = await createTask(data);
+    const task = await createTask({ ...data, actorId: req.auth?.userId });
     successResponse(res, { task }, 201);
   } catch (error) {
     next(error);
@@ -46,7 +49,7 @@ export const getTask = async (req: Request, res: Response, next: NextFunction) =
 export const putTask = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = String(req.params.id);
-    const task = await updateTask(id, req.body);
+    const task = await updateTask(id, req.body, req.auth?.userId);
     successResponse(res, { task });
   } catch (error) {
     next(error);
@@ -57,7 +60,7 @@ export const patchStatus = async (req: Request, res: Response, next: NextFunctio
   try {
     const status = req.body.status;
     const id = String(req.params.id);
-    const task = await updateTaskStatus(id, status);
+    const task = await updateTaskStatus(id, status, req.auth?.userId);
     successResponse(res, { task });
   } catch (error) {
     next(error);

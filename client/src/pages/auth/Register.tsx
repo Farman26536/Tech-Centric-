@@ -27,7 +27,7 @@ export default function Register() {
     setIsSubmitting(true);
     try {
       await register({ name, email, password, role });
-      navigate('/');
+      navigate('/dashboard');
     } catch (err: unknown) {
       setError(getApiErrorMessage(err));
     } finally {

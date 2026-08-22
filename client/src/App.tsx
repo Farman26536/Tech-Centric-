@@ -1,11 +1,12 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { AdminRoute } from './routes/AdminRoute';
 import { AppLayout } from './layouts/AppLayout';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Dashboard from './pages/dashboard/Dashboard';
+import LandingPage from './pages/landing/LandingPage';
 import Projects from './pages/projects/Projects';
 import ProjectDetails from './pages/projects/ProjectDetails';
 import NewProject from './pages/projects/NewProject';
@@ -19,15 +20,6 @@ import Calendar from './pages/calendar/Calendar';
 import Reports from './pages/reports/Reports';
 import Activity from './pages/activity/Activity';
 
-const FoundationPage = () => (
-  <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
-    <section style={{ maxWidth: 640, padding: 32 }}>
-      <h1>TeamFlow</h1>
-      <p>Authentication foundation is ready. Feature pages are provided by the assigned feature branches.</p>
-    </section>
-  </main>
-);
-
 const UnauthorizedPage = () => (
   <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
     <section>
@@ -37,17 +29,32 @@ const UnauthorizedPage = () => (
   </main>
 );
 
+const LandingRoute = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div role="status">Loading...</div>;
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <LandingPage />;
+};
+
 export default function App() {
   return (
     <AuthProvider>
       <Routes>
         <Route path="/403" element={<UnauthorizedPage />} />
+        <Route path="/" element={<LandingRoute />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/new" element={<NewProject />} />
             <Route path="/projects/:id" element={<ProjectDetails />} />

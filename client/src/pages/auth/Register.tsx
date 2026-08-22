@@ -42,7 +42,7 @@ export default function Register() {
           <div className="p-2 bg-indigo-50 rounded-md text-indigo-600"><User className="w-6 h-6" /></div>
           <div>
             <div className="text-lg font-semibold">Create your account</div>
-            <div className="text-sm text-gray-500">Join TeamFlow and start managing your projects.</div>
+            <div className="text-sm text-gray-500">Join <span className="font-medium"><span className="text-indigo-600">T</span>eamFlow</span> and start managing your projects.</div>
           </div>
         </div>
 

@@ -36,7 +36,7 @@ export default function Login() {
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-indigo-50 rounded-md text-indigo-600"><ShieldCheck className="w-6 h-6" /></div>
           <div>
-            <div className="text-lg font-semibold">TeamFlow</div>
+            <div className="text-lg font-semibold"><span className="text-indigo-600">T</span>eamFlow</div>
             <div className="text-sm text-gray-500">Project Management Made Simple</div>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
+import { getApiErrorMessage } from '../../api/axios';
 
 export default function Login() {
   const { login } = useAuth();
@@ -22,8 +23,8 @@ export default function Login() {
     try {
       await login({ email, password });
       navigate(from, { replace: true });
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to sign in');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err));
     } finally {
       setIsSubmitting(false);
     }

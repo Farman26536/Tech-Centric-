@@ -32,7 +32,7 @@ const UnauthorizedPage = () => (
   <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
     <section>
       <h1>403</h1>
-      <p>You are not authorized to access this area.</p>
+      <p>You don't have permission to access this page.</p>
     </section>
   </main>
 );

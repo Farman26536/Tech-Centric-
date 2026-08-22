@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Mail, Lock, Eye, EyeOff, Check } from 'lucide-react';
+import { getApiErrorMessage } from '../../api/axios';
 
 export default function Register() {
   const { register } = useAuth();
@@ -27,8 +28,8 @@ export default function Register() {
     try {
       await register({ name, email, password, role });
       navigate('/');
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to create account');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err));
     } finally {
       setIsSubmitting(false);
     }

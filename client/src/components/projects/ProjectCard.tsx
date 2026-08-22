@@ -31,7 +31,7 @@ export default function ProjectCard({ project, taskCount = 0, onOpen, onEdit, on
               <p className="mt-1 line-clamp-2 text-sm text-slate-500">{project.description || 'No description'}</p>
             </div>
           </div>
-          <span className={`shrink-0 rounded-md border px-3 py-1 text-xs font-semibold ${statusColors[project.status]}`}>
+          <span className={`shrink-0 rounded-lg px-3 py-1 text-xs font-semibold ${statusColors[project.status]}`}>
             {project.status.replace('_', ' ')}
           </span>
         </div>

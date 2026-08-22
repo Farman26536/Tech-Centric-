@@ -13,7 +13,7 @@ export const AdminRoute = () => {
   }
 
   if (user.role !== 'ADMIN') {
-    return <Navigate to="/403" replace />;
+    return <Navigate to="/projects" replace />;
   }
 
   return <Outlet />;

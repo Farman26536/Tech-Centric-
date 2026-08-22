@@ -9,6 +9,7 @@ import {
 } from '../services/project.service.js';
 
 import { successResponse } from '../utils/apiResponse.js';
+import { createProjectSchema } from '../validators/project.validator.js';
 
 export const listProjects = async (
   req: Request,
@@ -33,9 +34,22 @@ export const create = async (
   next: NextFunction
 ) => {
   try {
-    const data = req.body;
+    const data = createProjectSchema.parse({
+      ...req.body,
+      dueDate: req.body.dueDate ?? req.body.endDate,
+      endDate: req.body.endDate ?? req.body.dueDate,
+    });
 
-    const project = await createProject(data);
+    const endDateValue = data.endDate ?? data.dueDate ?? undefined;
+    const { endDate, ...projectInput } = data;
+
+    const project = await createProject({
+      ...projectInput,
+      startDate: projectInput.startDate ? new Date(projectInput.startDate) : null,
+      dueDate: endDateValue ? new Date(endDateValue) : null,
+      description: projectInput.description?.trim() || undefined,
+      actorId: req.auth?.userId,
+    });
 
     successResponse(res, { project }, 201);
   } catch (error) {

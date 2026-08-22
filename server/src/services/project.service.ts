@@ -7,9 +7,20 @@ export const createProject = async (data: {
   description?: string;
   startDate?: Date | null;
   dueDate?: Date | null;
+  endDate?: Date | null;
   actorId?: string;
 }) => {
-  const project = await prisma.project.create({ data: { name: data.name, description: data.description, startDate: data.startDate, dueDate: data.dueDate } });
+  const normalizedDueDate = data.endDate ?? data.dueDate ?? null;
+
+  const project = await prisma.project.create({
+    data: {
+      name: data.name,
+      description: data.description,
+      startDate: data.startDate,
+      dueDate: normalizedDueDate,
+    }
+  });
+
   await logActivity({ actorId: data.actorId, action: 'PROJECT_CREATED', entity: 'PROJECT', entityId: project.id, projectId: project.id, message: `Created project "${project.name}"` });
   return project;
 };

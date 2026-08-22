@@ -6,7 +6,7 @@ import { Home, FolderKanban, CheckSquare, Users, User, LogOut, BarChart3, Calend
 
 const NavItem: React.FC<{ to:string; icon:React.ReactNode; label:string }> = ({to,icon,label}) => {
   const loc=useLocation(); const active=loc.pathname===to || (to!=='/' && loc.pathname.startsWith(to));
-  return <Link to={to} className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ${active?'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50':'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'}`}><span className="w-6">{icon}</span>{label}</Link>;
+  return <Link to={to} className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${active ? 'bg-indigo-50 text-indigo-600 border-l-4 border-indigo-600 pl-2 shadow-sm' : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'}`}><span className="w-6">{icon}</span>{label}</Link>;
 };
 export const Sidebar=()=>{
  const {user,logout}=useAuth(); const navigate=useNavigate();

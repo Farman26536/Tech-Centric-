@@ -2,14 +2,14 @@
 
 :root {
   color-scheme: light;
-  --app-bg: #f8fafc;
+  --app-bg: #f6f8fb;
   --app-surface: #ffffff;
-  --app-surface-soft: #f8fafc;
+  --app-surface-soft: #f3f5f8;
   --app-surface-muted: #eef2ff;
-  --app-border: #e2e8f0;
-  --app-text: #0f172a;
-  --app-text-muted: #475569;
-  --app-ring: rgba(79, 70, 229, 0.2);
+  --app-border: #e6e9ef;
+  --app-text: #0b1220;
+  --app-text-muted: #546174;
+  --app-ring: rgba(79, 70, 229, 0.18);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -54,8 +54,8 @@ html.dark body {
 }
 
 .container { max-width: 1100px; margin-left: auto; margin-right: auto; padding: 1rem; }
-.card { background-color: var(--app-surface); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06); border-radius: 0.5rem; padding: 1rem; border: 1px solid var(--app-border); }
-.card-day { background-color: var(--app-surface); border: 1px solid transparent; }
+.card { background-color: var(--app-surface); box-shadow: 0 6px 20px rgba(11,17,30,0.06); border-radius: 0.8rem; padding: 1rem; border: 1px solid var(--app-border); }
+.card-day { background-color: var(--app-surface); border: 1px solid transparent; border-radius: 0.5rem; }
 .muted { font-size: 0.875rem; color: var(--app-text-muted); }
 .muted { font-size: 0.875rem; color: var(--app-text-muted); }
 

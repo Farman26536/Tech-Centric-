@@ -54,14 +54,12 @@ export default function App() {
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/tasks/new" element={<NewTask />} />
             <Route path="/tasks/:id" element={<TaskDetails />} />
+            <Route path="/team" element={<Team />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/activity" element={<Activity />} />
-            <Route element={<AdminRoute />}>
-              <Route path="/team" element={<Team />} />
-            </Route>
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

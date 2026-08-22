@@ -5,9 +5,9 @@ import { requireAdmin } from '../middleware/role.middleware.js';
 
 export const userRouter = Router();
 
-userRouter.use(authenticate, requireAdmin);
+userRouter.use(authenticate);
 
 userRouter.get('/', getUsers);
 userRouter.get('/:id', getUser);
-userRouter.put('/:id', putUser);
-userRouter.delete('/:id', removeUser);
+userRouter.put('/:id', requireAdmin, putUser);
+userRouter.delete('/:id', requireAdmin, removeUser);

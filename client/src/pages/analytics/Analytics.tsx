@@ -17,15 +17,16 @@ export default function Analytics() {
     performance: [ { userId: 1, name: 'Alice', assigned: 5, completed: 2, completionRate: 40 }, { userId: 2, name: 'Bob', assigned: 3, completed: 1, completionRate: 33 } ]
   };
   const effective = data ?? demo;
-  const maxPriority = Math.max(1, ...effective.byPriority.map((x: any) => x.count));
-  const maxStatus = Math.max(1, ...effective.byStatus.map((x: any) => x.count));
+  const summary = effective?.summary ?? demo.summary;
+  const maxPriority = Math.max(1, ...(effective?.byPriority ?? demo.byPriority).map((x: any) => x.count));
+  const maxStatus = Math.max(1, ...(effective?.byStatus ?? demo.byStatus).map((x: any) => x.count));
   return <div className="space-y-6">
     <div><h1 className="text-2xl font-semibold">Dashboard Analytics</h1><p className="text-sm text-slate-500">Real-time project, task and team performance insights.</p></div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <Card><div className="flex justify-between"><span>Projects</span><FolderKanban className="text-indigo-500"/></div><b className="mt-3 block text-3xl">{data.summary.projects}</b></Card>
-      <Card><div className="flex justify-between"><span>Tasks</span><BarChart3 className="text-blue-500"/></div><b className="mt-3 block text-3xl">{data.summary.tasks}</b></Card>
-      <Card><div className="flex justify-between"><span>Completed</span><CheckCircle2 className="text-emerald-500"/></div><b className="mt-3 block text-3xl">{data.summary.completionRate}%</b></Card>
-      <Card><div className="flex justify-between"><span>Overdue</span><AlertTriangle className="text-red-500"/></div><b className="mt-3 block text-3xl">{data.summary.overdue}</b></Card>
+      <Card><div className="flex justify-between"><span>Projects</span><FolderKanban className="text-indigo-500"/></div><b className="mt-3 block text-3xl">{summary.projects}</b></Card>
+      <Card><div className="flex justify-between"><span>Tasks</span><BarChart3 className="text-blue-500"/></div><b className="mt-3 block text-3xl">{summary.tasks}</b></Card>
+      <Card><div className="flex justify-between"><span>Completed</span><CheckCircle2 className="text-emerald-500"/></div><b className="mt-3 block text-3xl">{summary.completionRate}%</b></Card>
+      <Card><div className="flex justify-between"><span>Overdue</span><AlertTriangle className="text-red-500"/></div><b className="mt-3 block text-3xl">{summary.overdue}</b></Card>
     </div>
     <div className="grid gap-4 lg:grid-cols-2">
           <Card><h2 className="mb-4 font-semibold">Tasks by status</h2><div className="space-y-4">{effective.byStatus.map((x: any) => <Bar key={x.status} label={x.status.replace('_',' ')} value={x.count} max={maxStatus}/>)}</div></Card>

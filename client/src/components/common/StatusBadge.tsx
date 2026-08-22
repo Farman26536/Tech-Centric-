@@ -2,7 +2,8 @@ import React from 'react';
 
 export const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const map: Record<string, string> = {
-    ACTIVE: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300',
+    // Make ACTIVE visually match the sidebar active style (left indigo accent, subtle shadow)
+    ACTIVE: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-300 border-l-4 border-indigo-600 pl-2 shadow-sm rounded-md',
     ARCHIVED: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
     COMPLETED: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300',
     IN_PROGRESS: 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300',

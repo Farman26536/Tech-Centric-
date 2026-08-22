@@ -17,7 +17,7 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
   if (!open) return null;
   const go = (path: string) => { onClose(); setQ(''); navigate(path); };
   return <div className="fixed inset-0 z-50 bg-black/40 p-4" onMouseDown={onClose}>
-    <div className="mx-auto mt-20 max-w-2xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl overflow-hidden" onMouseDown={e => e.stopPropagation()}>
+    <div className="mx-auto mt-20 max-w-2xl rounded-2xl card shadow-2xl overflow-hidden" onMouseDown={e => e.stopPropagation()}>
       <div className="flex items-center gap-3 border-b p-4 dark:border-slate-700">
         <Search className="text-slate-400" /><input autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="Search projects and tasks..." className="flex-1 outline-none bg-transparent" />
         <button onClick={onClose}><X /></button>

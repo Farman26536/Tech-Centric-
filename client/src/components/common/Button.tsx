@@ -8,10 +8,10 @@ type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 const ButtonBase = React.forwardRef<HTMLButtonElement, Props>(function Button({ variant = 'primary', loading, className = '', children, disabled, ...rest }, ref) {
   const base = 'inline-flex items-center gap-2 px-3 py-2 rounded text-sm font-medium';
   const styles: Record<string, string> = {
-    primary: 'bg-slate-900 text-white hover:bg-slate-800',
-    secondary: 'bg-slate-100 text-slate-700 hover:bg-slate-200',
+    primary: 'bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-slate-900 dark:hover:bg-slate-800',
+    secondary: 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700',
     danger: 'bg-red-500 text-white hover:bg-red-600',
-    ghost: 'bg-transparent text-slate-700 hover:bg-slate-100'
+    ghost: 'bg-transparent text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
   };
   return (
     <button

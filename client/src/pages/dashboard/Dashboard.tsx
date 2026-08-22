@@ -76,7 +76,7 @@ export default function Dashboard() {
 
           <div className="space-y-3">
             {projectProgress.length ? projectProgress.map((pp: any) => (
-              <div key={pp.project.id} className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+              <div key={pp.project.id} className="card rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-3">
@@ -92,12 +92,12 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-            )) : <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 rounded-2xl text-slate-500 dark:text-slate-400 text-sm">No projects found.</div>}
+            )) : <div className="card rounded-2xl p-4 text-sm muted">No projects found.</div>}
           </div>
         </div>
 
         <div className="space-y-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 rounded-2xl shadow-sm">
+          <div className="card rounded-2xl p-4 shadow-sm">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3">Tasks Status</h3>
             <div className="space-y-3">
               <div className="flex items-center gap-3">
@@ -141,7 +141,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 rounded-2xl shadow-sm">
+          <div className="card rounded-2xl p-4 shadow-sm">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3">Recent Activity</h3>
             <div className="space-y-3">
               {recentTasks.length ? recentTasks.map((t: any) => (

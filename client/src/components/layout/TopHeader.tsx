@@ -9,7 +9,7 @@ import ThemeToggle from '../features/ThemeToggle';
 export const TopHeader = () => {
   const { user } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
-  return <><header className="sticky top-0 z-30 border-b bg-white/95 px-6 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95">
+  return <><header className="sticky top-0 z-30 card px-6 py-3 backdrop-blur">
     <div className="flex items-center justify-between gap-4">
       <div className="text-sm font-medium text-slate-500">TeamFlow workspace</div>
       <div className="flex items-center gap-2">

@@ -2,7 +2,7 @@ import React from 'react';
 
 export const StatCard: React.FC<{ title: string; value: React.ReactNode; subtitle?: string; icon?: React.ReactNode; accent?: string }> = ({ title, value, subtitle, icon, accent = 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400' }) => {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+    <div className="rounded-2xl card p-4 shadow-sm transition hover:shadow-md">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-sm text-slate-500 dark:text-slate-400">{title}</div>

@@ -6,6 +6,8 @@ import GlobalSearch from '../features/GlobalSearch';
 import NotificationCenter from '../features/NotificationCenter';
 import ThemeToggle from '../features/ThemeToggle';
 
+// Non-functional: commit marker to include TopHeader.tsx in UI polish (no runtime change)
+
 export const TopHeader = () => {
   const { user } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);

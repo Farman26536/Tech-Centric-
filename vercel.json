@@ -4,18 +4,14 @@
   "installCommand": "npm run install:all",
   "outputDirectory": "client/dist",
   "framework": "vite",
-  "env": {
-    "NODE_ENV": "production"
-  },
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "server/dist/server.js",
-      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+      "dest": "/api/index.js"
     },
     {
       "src": "/(.*)",
-      "dest": "client/dist/index.html"
+      "dest": "/index.html"
     }
   ]
 }
